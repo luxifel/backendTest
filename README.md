@@ -77,6 +77,3 @@ In order to accomplish this, the API must fulfill the following use cases:
 5. You can write some automated tests if you want to;
 6. From the problem description above you can either do a very bare bones solution or add optional features that are not described. Use your time wisely; the absolute optimal solution might take too long to be effective in the apocalypse, so you must come up with the best possible solution that will hold up within the least ammount of time and still be able to showcase your skills in order to prove your worth.
 7. Write concise and clear commit messages, splitting your changes in little pieces.
-
-
-**Original test written by [Akita](https://t.co/W47ODZTOAc)**
