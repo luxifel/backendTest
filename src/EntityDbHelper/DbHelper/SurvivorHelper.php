@@ -1,4 +1,5 @@
 <?php
+
 namespace Src\EntityDbHelper\DbHelper;
 
 use Src\EntityDbHelper\DbHelper;
@@ -41,14 +42,19 @@ class SurvivorHelper extends DbHelper
      */
     public function addNewSurvivor($survivor)
     {
-
         $existSurvivor = $this->getSurvivorByName($survivor['name']);
-        if($existSurvivor){
+        if ($existSurvivor) {
             header('HTTP/1.1 400 BAD REQUEST');
             echo "Survivor already exists, pick another name";
             exit();
         }
-        return $this->survivorConnection->insert($survivor);
+
+        $this->survivorConnection->insert($survivor);
+    }
+
+    public function updateSurvivor($survivor)
+    {
+        $this->survivorConnection->update($survivor);
     }
 
 }
