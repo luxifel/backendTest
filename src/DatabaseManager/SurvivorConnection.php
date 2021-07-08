@@ -82,16 +82,16 @@ class SurvivorConnection
         }
     }
 
-    public function update($name, array $input)
+    public function update(array $input)
     {
         $stmt = "
             UPDATE $this->tbName 
             SET 
-                name = :name
-                age = :age
-                gender = :gender
-                location = :location
-                infected = :infected
+                name = :name,
+                age = :age,
+                gender = :gender,
+                location = :location,
+                infected = :infected,
                 reported = :reported
             WHERE
                 name = :name; 
@@ -109,7 +109,6 @@ class SurvivorConnection
                 ]
             );
 
-            return $stmt->rowCount();
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }

@@ -73,8 +73,6 @@ class InventoryConnection
                 ]
             );
 
-            var_dump($stmt);
-
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }
