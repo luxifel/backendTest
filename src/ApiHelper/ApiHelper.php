@@ -12,9 +12,16 @@ class ApiHelper
     const STATUS_OK = 'HTTP/1.1 200 OK';
     const STATUS_ERROR = 'HTTP/1.1 400 BAD REQUEST';
 
-    private $survivor;
-    private $inventory;
-    private $tradePoints;
+    public $survivor;
+    public $inventory;
+    public $tradePoints;
+
+    public function __construct()
+    {
+        $this->survivor = new SurvivorHelper();
+        $this->inventory = new InventoryHelper();
+        $this->tradePoints = new TradePointsHelper();
+    }
 
     /**
      * @return array
@@ -77,16 +84,45 @@ class ApiHelper
     }
 
     /**
+     * @return mixed
+     */
+    public function getAllSurvivors()
+    {
+        return $this->survivor->getAllSurvivors();
+    }
+
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function getSurvivorByName($name)
+    {
+        return $this->survivor->getSurvivorByName($name);
+    }
+
+    /**
      * @param $name
      * @return mixed
      */
     public function getSurvivorIdByName($name)
     {
-        if (!$this->survivor) {
-            $this->survivor = new SurvivorHelper();
-        }
+        return $this->getSurvivorByName($name)['id_survivor'];
+    }
 
-        return $this->survivor->getSurvivorByName($name)['id_survivor'];
+    /**
+     * @param $survivor
+     */
+    public function addNewSurvivor($survivor)
+    {
+        $this->survivor->addNewSurvivor($survivor);
+    }
+
+    /**
+     * @param $survivorData
+     */
+    public function updateSurvivor($survivorData)
+    {
+        $this->survivor->updateSurvivor($survivorData);
     }
 
     /**
@@ -95,10 +131,6 @@ class ApiHelper
      */
     public function getInventoryBySurvivorId($survivorId)
     {
-        if (!$this->inventory) {
-            $this->inventory = new InventoryHelper();
-        }
-
         return $this->inventory->getInventoryBySurvivorId($survivorId);
     }
 
@@ -108,11 +140,16 @@ class ApiHelper
      */
     public function getInventoryItemsQty($inventory)
     {
-        if (!$this->inventory) {
-            $this->inventory = new InventoryHelper();
-        }
-
         return $this->inventory->getInventoryItemsQty($inventory);
+    }
+
+    /**
+     * @param $inventory
+     * @return mixed
+     */
+    public function addNewInventory($inventory)
+    {
+        return $this->inventory->addNewInventory($inventory);
     }
 
     /**
@@ -120,10 +157,6 @@ class ApiHelper
      */
     public function getAllTradePoints()
     {
-        if (!$this->inventory) {
-            $this->tradePoints = new TradePointsHelper();
-        }
-
         return $this->tradePoints->getAllTradePoints();
     }
 
@@ -133,10 +166,6 @@ class ApiHelper
      */
     public function getItemPoints($tablePoints)
     {
-        if (!$this->inventory) {
-            $this->tradePoints = new TradePointsHelper();
-        }
-
         return $this->tradePoints->getItemPoints($tablePoints);
     }
 
