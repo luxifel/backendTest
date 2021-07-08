@@ -1,4 +1,5 @@
 <?php
+
 namespace Src\EntityDbHelper\DbHelper;
 
 use Src\EntityDbHelper\DbHelper;
@@ -30,9 +31,9 @@ class InventoryHelper extends DbHelper
      * @param $survivorId
      * @return mixed
      */
-    public function getInventoryBySurvivorId($inventory)
+    public function getInventoryBySurvivorId($survivorId)
     {
-        return $this->inventoryConnection->selectBySurvivorId($inventory)[0];
+        return $this->inventoryConnection->selectBySurvivorId($survivorId);
     }
 
     /**
@@ -41,17 +42,39 @@ class InventoryHelper extends DbHelper
      */
     public function addNewInventory($inventory)
     {
-
-        $existInventory = $this->getInventoryBySurvivorId($inventory);
-        if($existInventory){
+        $existInventory = $this->getInventoryBySurvivorId($inventory['id_survivor']);
+        if ($existInventory) {
             header('HTTP/1.1 400 BAD REQUEST');
             echo "Inventory already exists, pick another survivor name";
             exit();
         }
 
-        foreach ($inventory as $item){
+        foreach ($inventory as $item) {
             $this->inventoryConnection->insert($item);
         }
+    }
+
+    public function getInventoryItemsQty($inventory)
+    {
+        $itemQty = [];
+        foreach ($inventory as $value) {
+            $item = '';
+            foreach ($value as $key => $val) {
+                if ($key == 'item') {
+                    $item = $val;
+                }
+                if ($key == 'qty') {
+                    $itemQty[$item] = $val;
+                }
+            }
+        }
+
+        return $itemQty;
+    }
+
+    public function updateInventory($inventory)
+    {
+        $this->inventoryConnection->update($inventory);
     }
 
 }
