@@ -4,6 +4,8 @@ namespace Src\ApiController;
 
 use Src\EntityDbHelper\DbHelper\SurvivorHelper;
 use Src\EntityDbHelper\DbHelper\InventoryHelper;
+use Src\EntityDbHelper\DbHelper\TradePointsHelper;
+
 
 class ApiController
 {
@@ -11,6 +13,7 @@ class ApiController
     const STATUS_ERROR = 'HTTP/1.1 400 BAD REQUEST';
     private $survivor;
     private $inventory;
+    private $tradePoints;
     private $requestMethod;
     private $uriPath;
     private $uriQuery;
@@ -25,19 +28,27 @@ class ApiController
 
     public function processRequest()
     {
+        $response = [];
         switch ($this->requestMethod) {
             case 'GET':
-                $this->_getActionCall();
+                $response = $this->getActionCall();
                 break;
             case 'POST':
-                $this->_addSurvivor();
+                $response = $this->_addSurvivor();
+                break;
+            case 'PUT':
+                $response = $this->getUpdateCall();
                 break;
             default:
+                $this->runBadRequest();
                 break;
         }
+
+        header($response['status_code_header']);
+        echo $response['body'];
     }
 
-    private function _getActionCall()
+    public function getActionCall()
     {
         if (!$this->uriPath[2]) {
             $this->runBadRequest();
@@ -63,9 +74,31 @@ class ApiController
                 break;
         }
 
-        header($result['status_code_header']);
+        return $result;
+    }
 
-        echo $result['body'];
+    public function getUpdateCall()
+    {
+        if (!$this->uriPath[2]) {
+            $this->runBadRequest();
+        }
+        $result = [];
+        switch ($this->uriPath[2]) {
+            case 'updateLocation':
+                $result = $this->_updateSurvivor('location');
+                breaK;
+            case 'reportInfected':
+                $result = $this->_updateSurvivor('reported');
+                breaK;
+            case 'tradeItems':
+                $result = $this->_tradeItems();
+                breaK;
+            default:
+                $this->runBadRequest();
+                break;
+        }
+
+        return $result;
     }
 
     private function _getInfectedPercentage()
@@ -125,8 +158,26 @@ class ApiController
     {
     }
 
+    private function _setParamsDataFromUriQuery()
+    {
+        $this->uriQuery = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
+        if (!$this->uriQuery) {
+            $this->uriParams = null;
+
+            return;
+        }
+        $params = [];
+        parse_str($this->uriQuery, $params);
+
+        $this->uriParams = $params;
+    }
+
     private function _addSurvivor()
     {
+        if ($this->uriPath[2] !== 'addSurvivor') {
+            $this->runBadRequest();
+        }
+
         $survivorData = $this->_getSurvivorDataFromPost();
         $this->survivor = new SurvivorHelper();
         $this->survivor->addNewSurvivor($survivorData);
@@ -136,6 +187,12 @@ class ApiController
         $inventoryData = $this->_getInventoryDataFromPost($survivorId);
 
         $this->inventory->addNewInventory($inventoryData);
+
+        $message = 'Survivor Created!';
+        $response['status_code_header'] = self::STATUS_OK;
+        $response['body'] = json_encode($message);
+
+        return $response;
     }
 
     private function _getSurvivorDataFromPost()
@@ -167,18 +224,55 @@ class ApiController
         return $inventoryData;
     }
 
-    private function _setParamsDataFromUriQuery()
+    private function _updateSurvivor($type)
     {
-        $this->uriQuery = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
-        if (!$this->uriQuery) {
-            $this->uriParams = null;
-
-            return;
+        $vars = json_decode(file_get_contents("php://input"), true);
+        if (!$vars['name']) {
+            $this->runBadRequest();
         }
-        $params = [];
-        parse_str($this->uriQuery, $params);
+        $isLocationType = $type == 'location';
+        if ($isLocationType && !$vars['location']) {
+            $this->runBadRequest();
+        }
 
-        $this->uriParams = $params;
+        $this->survivor = new SurvivorHelper();
+        $survivorData = $this->survivor->getSurvivorByName($vars['name']);
+        $survivorData[$type] = $isLocationType ? $vars['location'] : $survivorData[$type] + 1;
+
+        $this->survivor->updateSurvivor($survivorData);
+
+        $message = 'Survivor: ' . $survivorData['name'] . ' Updated! ';
+
+        if (!$isLocationType && $survivorData[$type] >= 3) {
+            $survivorData['infected'] = 1;
+            $message .= $survivorData['name'] . ' is now infected!!';
+        }
+
+        $response['status_code_header'] = self::STATUS_OK;
+        $response['body'] = json_encode($message);
+
+        return $response;
+    }
+
+    private function _tradeItems()
+    {
+        $vars = json_decode(file_get_contents("php://input"), true);
+
+        if(!$vars['buyer'] || !$vars['seller']){
+            $this->runBadRequest();
+        }
+
+        $tradePoints = [];
+        $this->tradePoints = new TradePointsHelper();
+        $tradePoints = $this->tradePoints->getAllTradePoints();
+
+        var_dump($tradePoints);
+
+        $message = 'Trade Done';
+        $response['status_code_header'] = self::STATUS_OK;
+        $response['body'] = json_encode($message);
+
+        return $response;
     }
 
     /**
