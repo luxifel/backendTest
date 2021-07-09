@@ -1,0 +1,3 @@
+/.docker/db
+/.env
+/vendor
