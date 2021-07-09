@@ -1,0 +1,210 @@
+{
+	"info": {
+		"_postman_id": "b417f438-139c-4071-b6d3-d6c3faf8d2e0",
+		"name": "ZSSN",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "addSurvivor",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "name",
+						"value": "ciccio",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "franco",
+							"type": "text"
+						},
+						{
+							"key": "age",
+							"value": "24",
+							"type": "text"
+						},
+						{
+							"key": "gender",
+							"value": "male",
+							"type": "text"
+						},
+						{
+							"key": "location",
+							"value": "+0391/+933838",
+							"type": "text"
+						},
+						{
+							"key": "water",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "food",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "medication",
+							"value": "2",
+							"type": "text"
+						},
+						{
+							"key": "ammunition",
+							"value": "4",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1/api.php/addSurvivor",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"api.php",
+						"addSurvivor"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tradeItems",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "name",
+						"value": "ciccio",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"buyer\": {\n        \"name\": \"gigi\",\n        \"water\": \"1\"\n    }, \n    \"seller\": {\n        \"name\": \"testerino\",\n        \"food\": \"1\",\n        \"ammunition\": \"1\"\n        }\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1/api.php/tradeItems",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"api.php",
+						"tradeItems"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updateLocation",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"testerina\",\n    \"location\":{\n        \"longitude\":\"-093245\",\n        \"latitude\":\"+101010\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1/api.php/updateLocation",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"api.php",
+						"updateLocation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reportInfected",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"gigi2\"\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1/api.php/reportInfected",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"api.php",
+						"reportInfected"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getInfectedPercentage",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1/api.php/getInfectedPercentage",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"api.php",
+						"getInfectedPercentage"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getNonInfectedPercentage",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1/api.php/getNonInfectedPercentage",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"path": [
+						"api.php",
+						"getNonInfectedPercentage"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
