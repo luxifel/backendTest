@@ -1,8 +1,8 @@
 version: '3.1'
 services:
   apache2:
-    container_name: apache2_php
-    image: webdevops/php-apache:ubuntu-18.04
+    container_name: docker_apache2_php
+    build: .
     ports:
       - 80:80
       - 443:443
@@ -12,7 +12,10 @@ services:
       - mariadb
     links:
       - mariadb
-    restart: always
+    environment:
+      PHP_IDE_CONFIG: 'serverName=postman'
+      XDEBUG_CONFIG: 'remote_mode=req remote_enable=1 remote_connect_back=0 remote_autostart=1 remote_host=172.17.0.1 remote_port=9000 idekey=PHPSTORM'
+      restart: always
     networks:
       zssn_net:
         ipv4_address: 12.7.0.4
@@ -28,6 +31,7 @@ services:
       - '3307'
     volumes:
       - ./db:/var/lib/mysql
+      - ./dumps/db.sql:/usr/db.sql
     networks:
       zssn_net:
         ipv4_address: 12.7.0.5
