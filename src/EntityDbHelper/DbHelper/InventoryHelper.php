@@ -54,7 +54,11 @@ class InventoryHelper extends DbHelper
         }
     }
 
-    public function getInventoryItemsQty($inventory)
+    /**
+     * @param $inventory
+     * @return array
+     */
+    public function getInventoryItemsQty($inventory): array
     {
         $itemQty = [];
         foreach ($inventory as $value) {

@@ -26,7 +26,7 @@ class ApiHelper
     /**
      * @return array
      */
-    public function getSurvivorDataFromPost()
+    public function getSurvivorDataFromPost(): array
     {
         $survivorData = [];
         if (!$_POST['name']) {
@@ -46,7 +46,7 @@ class ApiHelper
      * @param $survivorId
      * @return array
      */
-    public function setInventoryDataFromPost($survivorId)
+    public function setInventoryDataFromPost($survivorId): array
     {
         $inventoryData = [];
         array_push($inventoryData,
@@ -57,30 +57,6 @@ class ApiHelper
         );
 
         return $inventoryData;
-    }
-
-    /**
-     * @param $tradeBuyer
-     * @param $tradeSeller
-     * @return bool
-     */
-    public function tradeCanBeDone($tradeBuyer, $tradeSeller)
-    {
-        $survivorBuyerId = $this->getSurvivorIdByName($tradeBuyer['name']);
-        $inventoryBuyer = $this->getInventoryBySurvivorId($survivorBuyerId);
-        $itemsQtyBuyer = $this->getInventoryItemsQty($inventoryBuyer);
-
-        $survivorSellerId = $this->getSurvivorIdByName($tradeSeller['name']);
-        $inventorySeller = $this->getInventoryBySurvivorId($survivorSellerId);
-        $itemsQtySeller = $this->getInventoryItemsQty($inventorySeller);
-
-        $tablePoints = $this->getAllTradePoints();
-        $itemPoints = $this->getItemPoints($tablePoints);
-
-        $buyerPoints = $this->calculateTradePoints($tradeBuyer, $itemPoints, $itemsQtyBuyer);
-        $sellerPoints = $this->calculateTradePoints($tradeSeller, $itemPoints, $itemsQtySeller);
-
-        return $buyerPoints == $sellerPoints;
     }
 
     /**
@@ -135,12 +111,14 @@ class ApiHelper
     }
 
     /**
-     * @param $inventory
+     * @param $survivorId
      * @return array
      */
-    public function getInventoryItemsQty($inventory)
+    public function getInventoryItemsQtyBySurvivorId($survivorId): array
     {
-        return $this->inventory->getInventoryItemsQty($inventory);
+        $survivorInventory = $this->getInventoryBySurvivorId($survivorId);
+
+        return $this->inventory->getInventoryItemsQty($survivorInventory);
     }
 
     /**
@@ -150,6 +128,11 @@ class ApiHelper
     public function addNewInventory($inventory)
     {
         return $this->inventory->addNewInventory($inventory);
+    }
+
+    public function updateInventory($inventory)
+    {
+        $this->inventory->updateInventory($inventory);
     }
 
     /**
@@ -164,9 +147,31 @@ class ApiHelper
      * @param $tablePoints
      * @return array
      */
-    public function getItemPoints($tablePoints)
+    public function getItemPoints($tablePoints): array
     {
         return $this->tradePoints->getItemPoints($tablePoints);
+    }
+
+    /**
+     * @param $tradeBuyer
+     * @param $tradeSeller
+     * @return bool
+     */
+    public function tradeCanBeDone($tradeBuyer, $tradeSeller): bool
+    {
+        $survivorBuyerId = $this->getSurvivorIdByName($tradeBuyer['name']);
+        $itemsQtyBuyer = $this->getInventoryItemsQtyBySurvivorId($survivorBuyerId);
+
+        $survivorSellerId = $this->getSurvivorIdByName($tradeSeller['name']);
+        $itemsQtySeller = $this->getInventoryItemsQtyBySurvivorId($survivorSellerId);
+
+        $tablePoints = $this->getAllTradePoints();
+        $itemPoints = $this->getItemPoints($tablePoints);
+
+        $buyerPoints = $this->calculateTradePoints($tradeBuyer, $itemPoints, $itemsQtyBuyer);
+        $sellerPoints = $this->calculateTradePoints($tradeSeller, $itemPoints, $itemsQtySeller);
+
+        return $buyerPoints == $sellerPoints;
     }
 
     /**
@@ -200,18 +205,80 @@ class ApiHelper
      * @param $itemQty
      * @return bool
      */
-    public function checkIfTraderHasItems($traderInventory, $traderItem, $itemQty)
+    public function checkIfTraderHasItems($traderInventory, $traderItem, $itemRequestedQty): bool
     {
         $result = true;
         foreach ($traderInventory as $item => $qty) {
             if ($item == $traderItem) {
-                if ($itemQty < $qty) {
+                if ($qty < $itemRequestedQty) {
                     return false;
                 }
             }
         }
 
         return $result;
+    }
+
+    /**
+     * @param $buyerTrade
+     * @param $sellerTrade
+     */
+    public function updateInventoryTraders($buyerTrade, $sellerTrade)
+    {
+        $buyerId = $this->getSurvivorIdByName($buyerTrade['name']);
+        $buyerInventory = $this->getInventoryItemsQtyBySurvivorId($buyerId);
+        $sellerId = $this->getSurvivorIdByName($sellerTrade['name']);
+        $sellerInventory = $this->getInventoryItemsQtyBySurvivorId($sellerId);
+        $toSellerItems = $this->getToTraderItems($buyerInventory, $buyerTrade);
+        $toBuyerItems = $this->getToTraderItems($sellerInventory, $sellerTrade);
+
+        $this->updateFinalTraderInventory($buyerInventory, $toBuyerItems, $buyerId);
+        $this->updateFinalTraderInventory($sellerInventory, $toSellerItems, $sellerId);
+    }
+
+    /**
+     * @param $traderInventory
+     * @param $trade
+     * @return array
+     */
+    public function getToTraderItems(&$traderInventory, $trade): array
+    {
+        $result = [];
+
+        foreach ($traderInventory as $itemTrader => $qtyTrader) {
+            foreach ($trade as $itemTrade => $qtyTrade) {
+                if ($itemTrader != $itemTrade) {
+                    continue;
+                }
+                $traderInventory[$itemTrader] = $traderInventory[$itemTrader] - $qtyTrade;
+                $result[$itemTrader] = $qtyTrade;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $inventory
+     * @param $items
+     * @param $survivorId
+     */
+    public function updateFinalTraderInventory($inventory, $items, $survivorId)
+    {
+        $temporaryInventory = ['id_survivor' => $survivorId];
+        foreach ($inventory as $key => $value) {
+            if ($key == 'name') {
+                continue;
+            }
+            foreach ($items as $item => $qty) {
+                if ($key == $item) {
+                    $value = $inventory[$key] + $qty;
+                }
+            }
+            $temporaryInventory['item'] = $key;
+            $temporaryInventory['qty'] =  $value;
+            $this->updateInventory($temporaryInventory);
+        }
     }
 
     /**
@@ -238,3 +305,4 @@ class ApiHelper
         exit();
     }
 }
+

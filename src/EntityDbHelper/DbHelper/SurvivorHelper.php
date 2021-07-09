@@ -56,6 +56,5 @@ class SurvivorHelper extends DbHelper
     {
         $this->survivorConnection->update($survivor);
     }
-
 }
 

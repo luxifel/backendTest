@@ -31,7 +31,11 @@ class InventoryConnection
         }
     }
 
-    public function selectBySurvivorId(array $input)
+    /**
+     * @param $survivorId
+     * @return mixed
+     */
+    public function selectBySurvivorId($survivorId)
     {
         $stmt = "
             SELECT 
@@ -42,14 +46,8 @@ class InventoryConnection
         ";
         try {
             $stmt = $this->db->prepare($stmt);
-
-            $stmt->execute(
-                [
-                    'id_survivor' => $input['id_survivor'],
-                    'item'        => $input['item'],
-                    'qty'         => $input['qty'],
-                ]
-            );
+            $stmt->bindParam(':id_survivor', $survivorId, \PDO::PARAM_INT);
+            $stmt->execute();
 
             return $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
@@ -72,34 +70,30 @@ class InventoryConnection
                     'qty'         => $input['qty'],
                 ]
             );
-
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }
     }
 
-    public function update($id_survivor, array $input)
+    public function update(array $input)
     {
         $stmt = "
             UPDATE $this->tbName 
             SET 
-                id_survivor = :id_survivor
-                item = :item
+                id_survivor = :id_survivor,
+                item = :item,
                 qty = :qty
             WHERE
-                id_survivor = :id_survivor; 
+                id_survivor = :id_survivor 
+              AND
+               item = :item;   
         ";
         try {
             $stmt = $this->db->prepare($stmt);
-            $stmt->execute(
-                [
-                    'id_survivor' => $input['id_survivor'],
-                    'item'        => $input['item'],
-                    'qty'         => $input['qty'],
-                ]
-            );
-
-            return $stmt->rowCount();
+            $stmt->bindParam(':id_survivor', $input['id_survivor'], \PDO::PARAM_INT);
+            $stmt->bindParam(':item', $input['item'], \PDO::PARAM_STR);
+            $stmt->bindParam(':qty', $input['qty'], \PDO::PARAM_INT);
+            $stmt->execute();
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }

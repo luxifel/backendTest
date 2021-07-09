@@ -10,15 +10,13 @@ class ApiController
     private $helper;
     private $requestMethod;
     private $uriPath;
-    private $uriQuery;
-    private $uriParams;
 
     public function __construct($requestMethod, $uriPath)
     {
         $this->requestMethod = $requestMethod;
         $this->uriPath = $uriPath;
-        $this->processRequest();
         $this->helper = new ApiHelper();
+        $this->processRequest();
     }
 
     public function processRequest()
@@ -43,13 +41,15 @@ class ApiController
         echo $response['body'];
     }
 
-    public function getActionCall()
+    /**
+     * @return array
+     */
+    public function getActionCall(): array
     {
         if (!$this->uriPath[2]) {
             $this->helper->runBadRequest();
         }
 
-        $this->_setParamsDataFromUriQuery();
         $result = [];
         switch ($this->uriPath[2]) {
             case 'getInfectedPercentage':
@@ -72,7 +72,10 @@ class ApiController
         return $result;
     }
 
-    public function getUpdateCall()
+    /**
+     * @return array
+     */
+    public function getUpdateCall(): array
     {
         if (!$this->uriPath[2]) {
             $this->helper->runBadRequest();
@@ -96,7 +99,10 @@ class ApiController
         return $result;
     }
 
-    private function _getInfectedPercentage()
+    /**
+     * @return array
+     */
+    private function _getInfectedPercentage(): array
     {
         $infected = 0;
         $survivorsQty = 0;
@@ -130,7 +136,10 @@ class ApiController
         return $response;
     }
 
-    private function _getNonInfectedPercentage()
+    /**
+     * @return array
+     */
+    private function _getNonInfectedPercentage(): array
     {
         $infectedResponse = $this->_getInfectedPercentage();
         $percentage = $infectedResponse['percentage'];
@@ -144,29 +153,24 @@ class ApiController
         return $response;
     }
 
+    /**
+     * TODO
+     */
     private function _getAverageAllResources()
     {
     }
 
+    /**
+     * TODO
+     */
     private function _getLostPoints()
     {
     }
 
-    private function _setParamsDataFromUriQuery()
-    {
-        $this->uriQuery = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
-        if (!$this->uriQuery) {
-            $this->uriParams = null;
-
-            return;
-        }
-        $params = [];
-        parse_str($this->uriQuery, $params);
-
-        $this->uriParams = $params;
-    }
-
-    private function _addSurvivor()
+    /**
+     * @return array
+     */
+    private function _addSurvivor(): array
     {
         if ($this->uriPath[2] !== 'addSurvivor') {
             $this->helper->runBadRequest();
@@ -187,19 +191,32 @@ class ApiController
         return $response;
     }
 
-    private function _updateSurvivor($type)
+    /**
+     * @param $type
+     * @return array
+     */
+    private function _updateSurvivor($type): array
     {
         $vars = json_decode(file_get_contents("php://input"), true);
+
         if (!$vars['name']) {
             $this->helper->runBadRequest();
         }
+
         $isLocationType = $type == 'location';
+
         if ($isLocationType && !$vars['location']) {
             $this->helper->runBadRequest();
         }
 
+        if($isLocationType){
+            $long = $vars['location']['longitude'];
+            $lat = $vars['location']['latitude'];
+            $location = sprintf('%s/%s', $long, $lat);
+        }
+
         $survivorData = $this->helper->getSurvivorByName($vars['name']);
-        $survivorData[$type] = $isLocationType ? $vars['location'] : $survivorData[$type] + 1;
+        $survivorData[$type] = $isLocationType ? $location : $survivorData[$type] + 1;
 
         $this->helper->updateSurvivor($survivorData);
 
@@ -207,6 +224,7 @@ class ApiController
 
         if (!$isLocationType && $survivorData[$type] >= 3) {
             $survivorData['infected'] = 1;
+            $this->helper->updateSurvivor($survivorData);
             $message .= $survivorData['name'] . ' is now infected!!';
         }
 
@@ -216,7 +234,10 @@ class ApiController
         return $response;
     }
 
-    private function _tradeItems()
+    /**
+     * @return array
+     */
+    private function _tradeItems(): array
     {
         $vars = json_decode(file_get_contents("php://input"), true);
 
@@ -227,7 +248,7 @@ class ApiController
         $isTradeOk = $this->helper->tradeCanBeDone($vars['buyer'], $vars['seller']);
 
         if ($isTradeOk) {
-            $buyerId = $this->helper->getSurvivorIdByName($vars['buyer']['name']);
+            $this->helper->updateInventoryTraders($vars['buyer'], $vars['seller']);
         }
 
         $message = $isTradeOk ? 'Trade Done' : 'Trade cannot be done';
